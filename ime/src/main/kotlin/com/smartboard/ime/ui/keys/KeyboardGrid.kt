@@ -4,10 +4,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Language
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -20,6 +18,13 @@ import com.smartboard.ime.layouts.englishNumbersRow
 import com.smartboard.model.KeyboardSettings
 import com.smartboard.ui.theme.SmartBoardThemeColors
 
+/**
+ * Keyboard grid styled to match Gboard:
+ * - Minimal outer padding (4dp horizontal)
+ * - Each key handles its own internal padding (2dp horizontal, 3dp vertical in KeyboardKey)
+ * - No extra spacers between rows (the key's vertical padding provides the gap)
+ * - Total height driven by rows * 52dp key height
+ */
 @Composable
 fun KeyboardGrid(
     layout: KeyboardLayout,
@@ -47,7 +52,9 @@ fun KeyboardGrid(
     } else {
         ctx.getString(com.smartboard.ime.R.string.keyboard_brand_label)
     }
-    Column(modifier = modifier.fillMaxWidth()) {
+
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = 3.dp)) {
+        // Number row
         if (numberKeys != null) {
             Row(Modifier.fillMaxWidth()) {
                 numberKeys.forEach { key ->
@@ -63,20 +70,19 @@ fun KeyboardGrid(
                         background = colors.keySurface,
                         contentColor = colors.keyText,
                     )
-                    Spacer(Modifier.width(4.dp))
                 }
             }
-            Spacer(Modifier.height(6.dp))
         }
+        // Letter/symbol rows
         layout.rows.forEach { row ->
             Row(Modifier.fillMaxWidth()) {
                 row.keys.forEach { key ->
                     val weight = when (key.width) {
-                        KeyWidth.NARROW -> 0.7f
+                        KeyWidth.NARROW -> 0.8f
                         KeyWidth.NORMAL -> 1f
-                        KeyWidth.WIDE -> 1.45f
-                        KeyWidth.SPACE -> 4.2f
-                        KeyWidth.FULL -> 12f
+                        KeyWidth.WIDE -> 1.5f
+                        KeyWidth.SPACE -> 4.5f
+                        KeyWidth.FULL -> 10f
                     }
                     val label = when (key.action) {
                         KeyAction.CHARACTER -> {
@@ -106,7 +112,7 @@ fun KeyboardGrid(
                         onClick = { onKey(key) },
                         modifier = Modifier.weight(weight),
                         icon = icon,
-        emphasized = key.action == KeyAction.SPACE ||
+                        emphasized = key.action == KeyAction.SPACE ||
                             key.action == KeyAction.ENTER ||
                             key.action == KeyAction.BACKSPACE ||
                             key.action == KeyAction.SHIFT ||
@@ -115,16 +121,16 @@ fun KeyboardGrid(
                         onHapticKey = onHapticKey,
                         onHapticSpecial = onHapticSpecial,
                         background = when (key.action) {
-                            KeyAction.SPACE, KeyAction.BACKSPACE, KeyAction.ENTER, KeyAction.SHIFT -> colors.keySurfaceSpecial
+                            KeyAction.SPACE -> colors.keySurface
+                            KeyAction.BACKSPACE, KeyAction.ENTER, KeyAction.SHIFT,
+                            KeyAction.SYMBOLS, KeyAction.SWITCH_LANGUAGE -> colors.keySurfaceSpecial
                             else -> colors.keySurface
                         },
                         contentColor = colors.keyText,
                         onLongClick = longPress,
                     )
-                    Spacer(Modifier.width(4.dp))
                 }
             }
-            Spacer(Modifier.height(6.dp))
         }
     }
 }

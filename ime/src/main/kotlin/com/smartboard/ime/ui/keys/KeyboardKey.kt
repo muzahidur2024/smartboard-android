@@ -7,8 +7,8 @@ import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -24,9 +24,18 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+/**
+ * A single keyboard key styled to match Gboard's proportions:
+ * - 52dp row height (Gboard uses 52-58dp)
+ * - 22sp letter font size (Gboard uses ~22sp for single characters)
+ * - 12dp corner radius, subtle elevation
+ * - 3dp horizontal padding between keys (handled by grid spacer)
+ */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun KeyboardKey(
@@ -45,13 +54,15 @@ fun KeyboardKey(
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
-    val scale = if (pressed) 0.94f else 1f
+    val scale = if (pressed) 0.95f else 1f
+
     Box(
         modifier = modifier
-            .height(46.dp)
+            .height(52.dp)
+            .padding(horizontal = 2.dp, vertical = 3.dp)
             .scale(scale)
-            .shadow(2.dp, RoundedCornerShape(8.dp), clip = false)
-            .clip(RoundedCornerShape(8.dp))
+            .shadow(1.dp, RoundedCornerShape(12.dp), clip = false)
+            .clip(RoundedCornerShape(12.dp))
             .background(background)
             .combinedClickable(
                 interactionSource = interactionSource,
@@ -72,32 +83,39 @@ fun KeyboardKey(
         if (secondaryLabel != null) {
             Text(
                 text = secondaryLabel,
-                fontSize = 9.sp,
-                modifier = Modifier.align(Alignment.TopEnd),
-                color = contentColor.copy(alpha = 0.55f),
+                fontSize = 10.sp,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(end = 4.dp, top = 2.dp),
+                color = contentColor.copy(alpha = 0.5f),
             )
         }
         if (icon != null) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(icon, contentDescription = null, tint = contentColor, modifier = Modifier.size(22.dp))
-                if (label.isNotBlank()) {
-                    Text(
-                        text = label,
-                        fontSize = 10.sp,
-                        color = contentColor.copy(alpha = 0.85f),
-                    )
-                }
-            }
+            Icon(
+                icon,
+                contentDescription = null,
+                tint = contentColor,
+                modifier = Modifier.size(24.dp),
+            )
         } else {
             Text(
                 text = label,
                 fontSize = when {
-                    label.length > 14 -> 11.sp
-                    label.length > 1 && label.all { !it.isLetterOrDigit() } -> 14.sp
-                    else -> 16.sp
+                    // Single letter keys (a-z, A-Z, digits) - large like Gboard
+                    label.length == 1 -> 22.sp
+                    // Short labels (2-3 chars like "?!" or shift symbols)
+                    label.length <= 3 -> 18.sp
+                    // Medium labels like "space", "ABC", "?123"
+                    label.length <= 6 -> 14.sp
+                    // Long labels (language names on space bar)
+                    label.length <= 12 -> 12.sp
+                    else -> 11.sp
                 },
-                fontWeight = FontWeight.Normal,
+                fontWeight = if (label.length == 1) FontWeight.Normal else FontWeight.Medium,
                 color = contentColor,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+                overflow = TextOverflow.Clip,
             )
         }
     }
