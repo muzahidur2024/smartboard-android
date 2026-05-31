@@ -69,7 +69,7 @@ fun KeyboardRoot(
         accent = settings.themeAccent,
     ) {
         val colors = SmartBoardThemeColors.colors
-        val baseHeight = (220 * settings.keyboardHeightScale).dp
+        val baseHeight = (270 * settings.keyboardHeightScale).dp
         val haptic = settings.hapticEnabled
         val isRtl = state.layout.direction == "rtl"
 
@@ -108,7 +108,6 @@ fun KeyboardRoot(
                         wordmark = ctx.getString(com.smartboard.ime.R.string.app_wordmark),
                         modifier = Modifier.fillMaxWidth(),
                     )
-                    Spacer(Modifier.height(4.dp))
                     PinnedBar(
                         visible = settings.pinnedBarVisible,
                         pins = state.pins,
