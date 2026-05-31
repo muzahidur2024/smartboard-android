@@ -7,14 +7,15 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
@@ -44,6 +45,7 @@ import com.smartboard.ime.ui.panels.EmojiPanel
 import com.smartboard.ime.ui.panels.GifPanelPlaceholder
 import com.smartboard.ime.ui.pinnedbar.PinnedBar
 import com.smartboard.ime.ui.suggestions.SuggestionStrip
+import com.smartboard.ime.ui.toolbar.KeyboardToolbar
 import com.smartboard.model.KeyboardSettings
 import com.smartboard.ui.HapticsManager
 import com.smartboard.ui.theme.SmartBoardTheme
@@ -69,7 +71,9 @@ fun KeyboardRoot(
         accent = settings.themeAccent,
     ) {
         val colors = SmartBoardThemeColors.colors
-        val baseHeight = (270 * settings.keyboardHeightScale).dp
+        val scale = settings.keyboardHeightScale
+        val keyHeight = (52 * scale).dp
+        val panelHeight = (260 * scale).dp
         val haptic = settings.hapticEnabled
         val isRtl = state.layout.direction == "rtl"
 
@@ -92,8 +96,7 @@ fun KeyboardRoot(
             Column(
                 modifier = modifier
                     .fillMaxWidth()
-                    .height(baseHeight)
-                    .background(colors.keyboardBackground, RoundedCornerShape(topStart = 0.dp, topEnd = 0.dp)),
+                    .background(colors.keyboardBackground),
             ) {
                 Spacer(
                     modifier = Modifier
@@ -101,98 +104,130 @@ fun KeyboardRoot(
                         .height(1.dp)
                         .background(colors.divider),
                 )
-                if (state.activePanel == ImePanel.None) {
-                    SuggestionStrip(
-                        suggestions = state.suggestions,
-                        onSuggestion = { controller.applySuggestion(it) },
-                        wordmark = ctx.getString(com.smartboard.ime.R.string.app_wordmark),
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                    PinnedBar(
-                        visible = settings.pinnedBarVisible,
-                        pins = state.pins,
-                        onSelect = { controller.selectPinned(it) },
-                        onAdd = {
-                            controller.addQuickPin(
-                                title = ctx.getString(com.smartboard.ime.R.string.quick_pin_title),
-                                body = ctx.getString(com.smartboard.ime.R.string.quick_pin_body),
-                            )
-                        },
-                    )
-                }
                 when (state.activePanel) {
-                    ImePanel.Clipboard -> ClipboardPanel(
-                        items = state.clipboardItems,
-                        searchQuery = state.clipboardSearch,
-                        onSearchChange = { controller.setClipboardSearch(it) },
-                        showSearch = showClipboardSearch,
-                        onToggleSearch = { showClipboardSearch = !showClipboardSearch },
-                        onClearAll = { controller.clearClipboard() },
-                        onClose = {
-                            showClipboardSearch = false
-                            controller.closePanel()
-                        },
-                        onCategorySelected = { controller.setCategoryFilter(it) },
-                        selectedCategory = state.clipboardCategoryFilter,
-                        onItemClick = { controller.pasteFromClipboardItem(it) },
-                        onDeleteItem = { controller.deleteClipboardItem(it) },
-                        onPinToggle = { id, pinned -> controller.pinClipboardItem(id, pinned) },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                    )
-
-                    ImePanel.Emoji -> EmojiPanel(
-                        settings = settings,
-                        onPick = { controller.pasteText(it) },
-                        onBackspace = { controller.onKey(com.smartboard.ime.layouts.KeyDef("", action = com.smartboard.ime.layouts.KeyAction.BACKSPACE)) },
-                        onClose = { controller.closePanel() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                    )
-
-                    ImePanel.Gif -> GifPanelPlaceholder(
-                        onClose = { controller.closePanel() },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f),
-                    )
-
-                    ImePanel.None -> AnimatedContent(
-                        targetState = state.layout,
-                        transitionSpec = {
-                            val langs = settings.activeLanguages
-                            val forward = if (langs.isNotEmpty()) {
-                                val ti = langs.indexOf(targetState.locale).takeIf { it >= 0 } ?: 0
-                                val ii = langs.indexOf(initialState.locale).takeIf { it >= 0 } ?: 0
-                                ti >= ii
-                            } else {
-                                state.languageSwitchForward
-                            }
-                            slideInHorizontally(
-                                animationSpec = tween(200, easing = FastOutSlowInEasing),
-                                initialOffsetX = { if (forward) it else -it },
-                            ) togetherWith slideOutHorizontally(
-                                animationSpec = tween(200, easing = FastOutSlowInEasing),
-                                targetOffsetX = { if (forward) -it else it },
+                    ImePanel.None -> {
+                        if (state.suggestions.isNotEmpty()) {
+                            SuggestionStrip(
+                                suggestions = state.suggestions,
+                                onSuggestion = { controller.applySuggestion(it) },
+                                wordmark = ctx.getString(com.smartboard.ime.R.string.app_wordmark),
+                                modifier = Modifier.fillMaxWidth(),
                             )
-                        },
-                        label = "keyboard_layout",
-                    ) { layout ->
-                        KeyboardGrid(
-                            layout = layout,
+                        } else {
+                            KeyboardToolbar(
+                                showLanguage = settings.activeLanguages.size >= 2,
+                                onClipboard = { controller.openPanel(ImePanel.Clipboard) },
+                                onEmoji = { controller.openPanel(ImePanel.Emoji) },
+                                onGif = { controller.openPanel(ImePanel.Gif) },
+                                onLanguage = { controller.openLanguagePicker() },
+                                onVoice = { controller.startVoiceTyping() },
+                                onSettings = {
+                                    runCatching {
+                                        val intent = ctx.packageManager
+                                            .getLaunchIntentForPackage(ctx.packageName)
+                                            ?.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                        if (intent != null) ctx.startActivity(intent)
+                                    }
+                                },
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                        PinnedBar(
+                            visible = settings.pinnedBarVisible,
+                            pins = state.pins,
+                            onSelect = { controller.selectPinned(it) },
+                            onRemove = { controller.deletePin(it) },
+                            onAdd = {
+                                val recent = state.clipboardItems.firstOrNull()?.contentText
+                                if (!recent.isNullOrBlank()) {
+                                    controller.addQuickPin(title = recent.take(24), body = recent)
+                                } else {
+                                    controller.addQuickPin(
+                                        title = ctx.getString(com.smartboard.ime.R.string.quick_pin_title),
+                                        body = ctx.getString(com.smartboard.ime.R.string.quick_pin_body),
+                                    )
+                                }
+                            },
+                        )
+                        AnimatedContent(
+                            targetState = state.layout,
+                            transitionSpec = {
+                                val langs = settings.activeLanguages
+                                val forward = if (langs.isNotEmpty()) {
+                                    val ti = langs.indexOf(targetState.locale).takeIf { it >= 0 } ?: 0
+                                    val ii = langs.indexOf(initialState.locale).takeIf { it >= 0 } ?: 0
+                                    ti >= ii
+                                } else {
+                                    state.languageSwitchForward
+                                }
+                                slideInHorizontally(
+                                    animationSpec = tween(200, easing = FastOutSlowInEasing),
+                                    initialOffsetX = { if (forward) it else -it },
+                                ) togetherWith slideOutHorizontally(
+                                    animationSpec = tween(200, easing = FastOutSlowInEasing),
+                                    targetOffsetX = { if (forward) -it else it },
+                                )
+                            },
+                            label = "keyboard_layout",
+                        ) { layout ->
+                            KeyboardGrid(
+                                layout = layout,
+                                settings = settings,
+                                shiftPressed = state.shiftPressed,
+                                capsLock = state.capsLock,
+                                onKey = { controller.onKey(it) },
+                                onSpaceLongPress = { controller.openLanguagePicker() },
+                                hapticEnabled = haptic,
+                                onHapticKey = { HapticsManager.keyTap(ctx, haptic) },
+                                onHapticSpecial = { HapticsManager.specialKey(ctx, haptic) },
+                                keyHeight = keyHeight,
+                                modifier = Modifier.fillMaxWidth(),
+                            )
+                        }
+                    }
+
+                    ImePanel.Clipboard -> Box(Modifier.fillMaxWidth().height(panelHeight)) {
+                        ClipboardPanel(
+                            items = state.clipboardItems,
+                            searchQuery = state.clipboardSearch,
+                            onSearchChange = { controller.setClipboardSearch(it) },
+                            showSearch = showClipboardSearch,
+                            onToggleSearch = { showClipboardSearch = !showClipboardSearch },
+                            onClearAll = { controller.clearClipboard() },
+                            onClose = {
+                                showClipboardSearch = false
+                                controller.closePanel()
+                            },
+                            onCategorySelected = { controller.setCategoryFilter(it) },
+                            selectedCategory = state.clipboardCategoryFilter,
+                            onItemClick = { controller.pasteFromClipboardItem(it) },
+                            onDeleteItem = { controller.deleteClipboardItem(it) },
+                            onPinToggle = { id, pinned -> controller.pinClipboardItem(id, pinned) },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+
+                    ImePanel.Emoji -> Box(Modifier.fillMaxWidth().height(panelHeight)) {
+                        EmojiPanel(
                             settings = settings,
-                            shiftPressed = state.shiftPressed,
-                            capsLock = state.capsLock,
-                            onKey = { controller.onKey(it) },
-                            onSpaceLongPress = { controller.openLanguagePicker() },
-                            hapticEnabled = haptic,
-                            onHapticKey = { HapticsManager.keyTap(ctx, haptic) },
-                            onHapticSpecial = { HapticsManager.specialKey(ctx, haptic) },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f),
+                            onPick = { controller.pasteText(it) },
+                            onBackspace = {
+                                controller.onKey(
+                                    com.smartboard.ime.layouts.KeyDef(
+                                        "",
+                                        action = com.smartboard.ime.layouts.KeyAction.BACKSPACE,
+                                    ),
+                                )
+                            },
+                            onClose = { controller.closePanel() },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    }
+
+                    ImePanel.Gif -> Box(Modifier.fillMaxWidth().height(panelHeight)) {
+                        GifPanelPlaceholder(
+                            onClose = { controller.closePanel() },
+                            modifier = Modifier.fillMaxSize(),
                         )
                     }
                 }

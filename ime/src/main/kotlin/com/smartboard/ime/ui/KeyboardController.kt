@@ -22,6 +22,7 @@ import com.smartboard.ime.layouts.KeyboardLayout
 import com.smartboard.ime.layouts.json.LanguageMeta
 import com.smartboard.ime.layouts.json.LanguagePackLoader
 import com.smartboard.ime.layouts.placeholderKeyboardLayout
+import com.smartboard.ime.voice.VoiceTypingController
 import com.smartboard.model.ClipboardCategory
 import com.smartboard.model.ClipboardEntry
 import com.smartboard.model.ClipboardReadMode
@@ -63,6 +64,7 @@ class KeyboardController @Inject constructor(
     private val deletePinUseCase: DeletePinUseCase,
     private val movePinFirst: MovePinToFirstUseCase,
     private val languagePackLoader: LanguagePackLoader,
+    private val voiceController: VoiceTypingController,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var inputConnection: InputConnection? = null
@@ -423,6 +425,18 @@ class KeyboardController @Inject constructor(
     fun selectPinned(snippet: PinnedSnippet) {
         _uiState.update { it.copy(lastPinnedSelectionId = snippet.id) }
         pasteText(snippet.body)
+    }
+
+    fun startVoiceTyping() {
+        runCatching {
+            if (!voiceController.isAvailable()) return
+            voiceController.startDictation(
+                onPartial = {},
+                onFinal = { text ->
+                    if (text.isNotBlank()) inputConnection?.commitText(text, 1)
+                },
+            )
+        }
     }
 }
 
