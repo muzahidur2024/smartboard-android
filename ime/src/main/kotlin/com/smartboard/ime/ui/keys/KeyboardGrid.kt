@@ -34,6 +34,7 @@ fun KeyboardGrid(
     capsLock: Boolean,
     onKey: (KeyDef) -> Unit,
     onSpaceLongPress: () -> Unit,
+    onDeleteWord: () -> Unit,
     hapticEnabled: Boolean,
     onHapticKey: () -> Unit,
     onHapticSpecial: () -> Unit,
@@ -132,6 +133,15 @@ fun KeyboardGrid(
                         contentColor = colors.keyText,
                         onLongClick = longPress,
                         keyHeight = keyHeight,
+                        repeatable = key.action == KeyAction.BACKSPACE,
+                        onRepeat = if (key.action == KeyAction.BACKSPACE) {
+                            { tick ->
+                                // Delete characters first, then whole words to clear fast.
+                                if (tick < 8) onKey(key) else onDeleteWord()
+                            }
+                        } else {
+                            null
+                        },
                     )
                 }
             }

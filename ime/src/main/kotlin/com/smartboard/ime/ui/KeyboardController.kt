@@ -377,6 +377,29 @@ class KeyboardController @Inject constructor(
         ic.deleteSurroundingText(count, 0)
     }
 
+    /**
+     * Deletes the previous word (any trailing whitespace plus the word before it). Used when the
+     * backspace key is held down, so text clears quickly the way Gboard does.
+     */
+    fun deleteLastWord() {
+        val ic = inputConnection ?: return
+        if (_uiState.value.composerBuffer.isNotEmpty()) {
+            _uiState.update { it.copy(composerBuffer = "") }
+        }
+        val selected = ic.getSelectedText(0)
+        if (!selected.isNullOrEmpty()) {
+            ic.commitText("", 1)
+            return
+        }
+        val before = ic.getTextBeforeCursor(256, 0)
+        if (before.isNullOrEmpty()) return
+        var i = before.length
+        while (i > 0 && before[i - 1].isWhitespace()) i--
+        while (i > 0 && !before[i - 1].isWhitespace()) i--
+        val count = (before.length - i).coerceAtLeast(1)
+        ic.deleteSurroundingText(count, 0)
+    }
+
     fun pasteFromClipboardItem(entry: ClipboardEntry) {
         scope.launch(Dispatchers.IO) {
             recordClipboardUsage(entry.id)

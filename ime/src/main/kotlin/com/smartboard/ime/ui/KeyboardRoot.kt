@@ -177,6 +177,7 @@ fun KeyboardRoot(
                                 capsLock = state.capsLock,
                                 onKey = { controller.onKey(it) },
                                 onSpaceLongPress = { controller.openLanguagePicker() },
+                                onDeleteWord = { controller.deleteLastWord() },
                                 hapticEnabled = haptic,
                                 onHapticKey = { HapticsManager.keyTap(ctx, haptic) },
                                 onHapticSpecial = { HapticsManager.specialKey(ctx, haptic) },
