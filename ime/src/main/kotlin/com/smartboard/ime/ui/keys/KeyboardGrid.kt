@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.smartboard.ime.layouts.KeyAction
 import com.smartboard.ime.layouts.KeyDef
@@ -37,6 +38,7 @@ fun KeyboardGrid(
     onHapticKey: () -> Unit,
     onHapticSpecial: () -> Unit,
     modifier: Modifier = Modifier,
+    keyHeight: Dp = 52.dp,
 ) {
     val colors = SmartBoardThemeColors.colors
     val ctx = LocalContext.current
@@ -69,6 +71,7 @@ fun KeyboardGrid(
                         onHapticSpecial = onHapticSpecial,
                         background = colors.keySurface,
                         contentColor = colors.keyText,
+                        keyHeight = keyHeight,
                     )
                 }
             }
@@ -128,6 +131,7 @@ fun KeyboardGrid(
                         },
                         contentColor = colors.keyText,
                         onLongClick = longPress,
+                        keyHeight = keyHeight,
                     )
                 }
             }

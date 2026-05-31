@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -51,6 +52,7 @@ fun KeyboardKey(
     contentColor: Color,
     icon: ImageVector? = null,
     onLongClick: (() -> Unit)? = null,
+    keyHeight: Dp = 52.dp,
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val pressed by interactionSource.collectIsPressedAsState()
@@ -58,7 +60,7 @@ fun KeyboardKey(
 
     Box(
         modifier = modifier
-            .height(52.dp)
+            .height(keyHeight)
             .padding(horizontal = 2.dp, vertical = 3.dp)
             .scale(scale)
             .shadow(1.dp, RoundedCornerShape(12.dp), clip = false)
