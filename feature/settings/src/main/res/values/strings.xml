@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">SmartBoard settings</string>
+    <string name="settings_clipboard_section">Clipboard</string>
+    <string name="settings_languages_section">Languages &amp; input</string>
+    <string name="settings_languages_manage">Manage keyboard languages…</string>
+    <string name="languages_screen_title">Languages &amp; input</string>
+    <string name="languages_section_intro">Your active languages appear on the keyboard.</string>
+    <string name="languages_globe_hint">Tap the globe key to switch between active languages (when two or more are enabled).</string>
+    <string name="languages_remove">Remove</string>
+    <string name="languages_add_language_cta">+ Add a language</string>
+    <string name="languages_add_title">Add a language</string>
+    <string name="languages_add_button">Add</string>
+    <string name="languages_add_dismiss">Close</string>
+    <string name="settings_clipboard_enabled">Enable clipboard history</string>
+    <string name="settings_pin_bar">Pin bar visible</string>
+    <string name="settings_gif_network">GIF network</string>
+    <string name="settings_keyboard_section">Keyboard</string>
+    <string name="settings_number_row">Number row</string>
+    <string name="settings_haptics">Haptics</string>
+    <string name="cd_back">Back</string>
+</resources>

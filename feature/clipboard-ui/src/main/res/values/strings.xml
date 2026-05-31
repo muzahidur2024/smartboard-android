@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="clipboard_title">Clipboard</string>
+    <string name="clipboard_search_placeholder">Search copied texts…</string>
+    <string name="clipboard_empty">No copied texts yet</string>
+    <string name="category_all">All</string>
+</resources>

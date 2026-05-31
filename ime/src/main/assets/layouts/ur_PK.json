@@ -1,0 +1,38 @@
+{
+  "locale": "ur_PK",
+  "displayName": "Urdu",
+  "nativeDisplayName": "اردو",
+  "direction": "rtl",
+  "family": "arabic",
+  "hasShiftVariants": false,
+  "hasNumberRow": true,
+  "flagEmoji": "🇵🇰",
+  "rows": [
+    {"keys": [
+      {"primary": "ق","width": "normal"},{"primary": "و","width": "normal"},{"primary": "ع","width": "normal"},{"primary": "ر","width": "normal"},{"primary": "ت","width": "normal"},
+      {"primary": "ے","width": "normal"},{"primary": "ئ","width": "normal"},{"primary": "ی","width": "normal"},{"primary": "ہ","width": "normal"},{"primary": "پ","width": "normal"}
+    ]},
+    {"keys": [
+      {"primary": "ا","width": "normal"},{"primary": "س","width": "normal"},{"primary": "د","width": "normal"},{"primary": "ف","width": "normal"},{"primary": "گ","width": "normal"},
+      {"primary": "ح","width": "normal"},{"primary": "ج","width": "normal"},{"primary": "ک","width": "normal"},{"primary": "ل","width": "normal"}
+    ]},
+    {"keys": [
+      {"primary": "ز","width": "normal"},{"primary": "ش","width": "normal"},{"primary": "چ","width": "normal"},{"primary": "ط","width": "normal"},{"primary": "ب","width": "normal"},
+      {"primary": "ن","width": "normal"},{"primary": "م","width": "normal"}
+    ]}
+  ],
+  "specialRows": {
+    "numberRow": {"keys": ["١","٢","٣","٤","٥","٦","٧","٨","٩","٠"]},
+    "symbolPage1": {"rows": [{"keys": [{"primary": "ٔ","width": "normal"},{"primary": "؟","width": "normal"}]}]}
+  },
+  "funcKeys": {
+    "shift": {"action": "SHIFT", "width": "wide"},
+    "delete": {"action": "BACKSPACE", "width": "wide"},
+    "enter": {"action": "ENTER", "width": "wide"},
+    "space": {"action": "SPACE", "width": "space"},
+    "languageSwitch": {"action": "SWITCH_LANGUAGE", "width": "narrow"},
+    "symbols": {"action": "SYMBOLS", "label": "?١٢٣", "width": "narrow"},
+    "emoji": {"action": "EMOJI", "label": "😀", "width": "narrow"},
+    "clipboard": {"action": "CLIPBOARD", "width": "narrow"}
+  }
+}

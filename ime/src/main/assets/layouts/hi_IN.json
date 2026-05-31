@@ -1,0 +1,38 @@
+{
+  "locale": "hi_IN",
+  "displayName": "Hindi",
+  "nativeDisplayName": "हिंदी",
+  "direction": "ltr",
+  "family": "devanagari",
+  "hasShiftVariants": false,
+  "hasNumberRow": true,
+  "flagEmoji": "🇮🇳",
+  "rows": [
+    {"keys": [
+      {"primary": "क","width": "normal"},{"primary": "ख","width": "normal"},{"primary": "ग","width": "normal"},{"primary": "घ","width": "normal"},{"primary": "च","width": "normal"},
+      {"primary": "छ","width": "normal"},{"primary": "ज","width": "normal"},{"primary": "झ","width": "normal"},{"primary": "ट","width": "normal"},{"primary": "ठ","width": "normal"}
+    ]},
+    {"keys": [
+      {"primary": "ड","width": "normal"},{"primary": "ढ","width": "normal"},{"primary": "ण","width": "normal"},{"primary": "त","width": "normal"},{"primary": "थ","width": "normal"},
+      {"primary": "द","width": "normal"},{"primary": "ध","width": "normal"},{"primary": "न","width": "normal"},{"primary": "प","width": "normal"},{"primary": "फ","width": "normal"}
+    ]},
+    {"keys": [
+      {"primary": "ब","width": "normal"},{"primary": "भ","width": "normal"},{"primary": "म","width": "normal"},{"primary": "य","width": "normal"},{"primary": "र","width": "normal"},
+      {"primary": "ल","width": "normal"},{"primary": "व","width": "normal"}
+    ]}
+  ],
+  "specialRows": {
+    "numberRow": {"keys": ["१","२","३","४","५","६","७","८","९","०"]},
+    "symbolPage1": {"rows": [{"keys": [{"primary": "ं","width": "normal"},{"primary": "ः","width": "normal"},{"primary": "्","width": "normal"}]}]}
+  },
+  "funcKeys": {
+    "shift": {"action": "SHIFT", "width": "wide"},
+    "delete": {"action": "BACKSPACE", "width": "wide"},
+    "enter": {"action": "ENTER", "width": "wide"},
+    "space": {"action": "SPACE", "width": "space"},
+    "languageSwitch": {"action": "SWITCH_LANGUAGE", "width": "narrow"},
+    "symbols": {"action": "SYMBOLS", "label": "?१२३", "width": "narrow"},
+    "emoji": {"action": "EMOJI", "label": "😀", "width": "narrow"},
+    "clipboard": {"action": "CLIPBOARD", "width": "narrow"}
+  }
+}

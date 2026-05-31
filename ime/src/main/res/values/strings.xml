@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="ime_name">SmartBoard</string>
+    <string name="subtype_english">English (US)</string>
+    <string name="subtype_bangla">বাংলা</string>
+    <string name="app_wordmark">SmartBoard</string>
+    <string name="keyboard_brand_label">SmartBoard</string>
+    <string name="language_picker_search">Search languages</string>
+    <string name="subtype_hindi">हिंदी</string>
+    <string name="subtype_spanish">Español</string>
+    <string name="subtype_french">Français</string>
+    <string name="subtype_german">Deutsch</string>
+    <string name="subtype_arabic">العربية</string>
+    <string name="subtype_urdu">اردو</string>
+    <string name="quick_pin_title">Quick pin</string>
+    <string name="quick_pin_body">Tap edit in the app to replace this text.</string>
+</resources>

@@ -1,0 +1,38 @@
+{
+  "locale": "ar",
+  "displayName": "Arabic",
+  "nativeDisplayName": "العربية",
+  "direction": "rtl",
+  "family": "arabic",
+  "hasShiftVariants": false,
+  "hasNumberRow": true,
+  "flagEmoji": "🇸🇦",
+  "rows": [
+    {"keys": [
+      {"primary": "ض","width": "normal"},{"primary": "ص","width": "normal"},{"primary": "ث","width": "normal"},{"primary": "ق","width": "normal"},{"primary": "ف","width": "normal"},
+      {"primary": "غ","width": "normal"},{"primary": "ع","width": "normal"},{"primary": "ه","width": "normal"},{"primary": "خ","width": "normal"},{"primary": "ح","width": "normal"}
+    ]},
+    {"keys": [
+      {"primary": "ش","width": "normal"},{"primary": "س","width": "normal"},{"primary": "ي","width": "normal"},{"primary": "ب","width": "normal"},{"primary": "ل","width": "normal"},
+      {"primary": "ا","width": "normal"},{"primary": "ت","width": "normal"},{"primary": "ن","width": "normal"},{"primary": "م","width": "normal"},{"primary": "ك","width": "normal"}
+    ]},
+    {"keys": [
+      {"primary": "ء","width": "normal"},{"primary": "ؤ","width": "normal"},{"primary": "ئ","width": "normal"},{"primary": "ى","width": "normal"},{"primary": "ة","width": "normal"},
+      {"primary": "و","width": "normal"},{"primary": "ر","width": "normal"},{"primary": "د","width": "normal"},{"primary": "ذ","width": "normal"}
+    ]}
+  ],
+  "specialRows": {
+    "numberRow": {"keys": ["١","٢","٣","٤","٥","٦","٧","٨","٩","٠"]},
+    "symbolPage1": {"rows": [{"keys": [{"primary": "َ","width": "normal"},{"primary": "ُ","width": "normal"},{"primary": "ِ","width": "normal"}]}]}
+  },
+  "funcKeys": {
+    "shift": {"action": "SHIFT", "width": "wide"},
+    "delete": {"action": "BACKSPACE", "width": "wide"},
+    "enter": {"action": "ENTER", "width": "wide"},
+    "space": {"action": "SPACE", "width": "space"},
+    "languageSwitch": {"action": "SWITCH_LANGUAGE", "width": "narrow"},
+    "symbols": {"action": "SYMBOLS", "label": "?١٢٣", "width": "narrow"},
+    "emoji": {"action": "EMOJI", "label": "😀", "width": "narrow"},
+    "clipboard": {"action": "CLIPBOARD", "width": "narrow"}
+  }
+}

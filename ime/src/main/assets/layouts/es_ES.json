@@ -1,0 +1,38 @@
+{
+  "locale": "es_ES",
+  "displayName": "Spanish",
+  "nativeDisplayName": "Español",
+  "direction": "ltr",
+  "family": "latin",
+  "hasShiftVariants": true,
+  "hasNumberRow": true,
+  "flagEmoji": "🇪🇸",
+  "rows": [
+    {"keys": [
+      {"primary": "q","primaryShift":"Q","width": "normal"},{"primary": "w","primaryShift":"W","width": "normal"},{"primary": "e","primaryShift":"E","width": "normal"},{"primary": "r","primaryShift":"R","width": "normal"},{"primary": "t","primaryShift":"T","width": "normal"},
+      {"primary": "y","primaryShift":"Y","width": "normal"},{"primary": "u","primaryShift":"U","width": "normal"},{"primary": "i","primaryShift":"I","width": "normal"},{"primary": "o","primaryShift":"O","width": "normal"},{"primary": "p","primaryShift":"P","width": "normal"}
+    ]},
+    {"keys": [
+      {"primary": "a","primaryShift":"A","width": "normal"},{"primary": "s","primaryShift":"S","width": "normal"},{"primary": "d","primaryShift":"D","width": "normal"},{"primary": "f","primaryShift":"F","width": "normal"},{"primary": "g","primaryShift":"G","width": "normal"},
+      {"primary": "h","primaryShift":"H","width": "normal"},{"primary": "j","primaryShift":"J","width": "normal"},{"primary": "k","primaryShift":"K","width": "normal"},{"primary": "l","primaryShift":"L","width": "normal"},{"primary": "ñ","primaryShift":"Ñ","width": "normal"}
+    ]},
+    {"keys": [
+      {"primary": "z","primaryShift":"Z","width": "normal"},{"primary": "x","primaryShift":"X","width": "normal"},{"primary": "c","primaryShift":"C","width": "normal"},{"primary": "v","primaryShift":"V","width": "normal"},{"primary": "b","primaryShift":"B","width": "normal"},
+      {"primary": "n","primaryShift":"N","width": "normal"},{"primary": "m","primaryShift":"M","width": "normal"}
+    ]}
+  ],
+  "specialRows": {
+    "numberRow": {"keys": ["1","2","3","4","5","6","7","8","9","0"]},
+    "symbolPage1": {"rows": [{"keys": [{"primary": "¡","width": "normal"},{"primary": "¿","width": "normal"},{"primary": "á","width": "normal"},{"primary": "é","width": "normal"}]}]}
+  },
+  "funcKeys": {
+    "shift": {"action": "SHIFT", "width": "wide"},
+    "delete": {"action": "BACKSPACE", "width": "wide"},
+    "enter": {"action": "ENTER", "width": "wide"},
+    "space": {"action": "SPACE", "width": "space"},
+    "languageSwitch": {"action": "SWITCH_LANGUAGE", "width": "narrow"},
+    "symbols": {"action": "SYMBOLS", "label": "?123", "width": "narrow"},
+    "emoji": {"action": "EMOJI", "label": "😀", "width": "narrow"},
+    "clipboard": {"action": "CLIPBOARD", "width": "narrow"}
+  }
+}
