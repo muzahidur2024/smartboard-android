@@ -4,8 +4,12 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.smartboard.app.navigation.AppNavGraph
 import com.smartboard.domain.settings.ObserveSettingsUseCase
@@ -36,14 +40,19 @@ class MainActivity : ComponentActivity() {
                 isSystemDark = dark,
                 accent = settings?.themeAccent ?: ThemeAccent.DEFAULT,
             ) {
-                AppNavGraph(
-                    settings = settings,
-                    onOnboardingDone = {
-                        lifecycleScope.launch {
-                            updateSetting { it.copy(onboardingComplete = true) }
-                        }
-                    },
-                )
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background,
+                ) {
+                    AppNavGraph(
+                        settings = settings,
+                        onOnboardingDone = {
+                            lifecycleScope.launch {
+                                updateSetting { it.copy(onboardingComplete = true) }
+                            }
+                        },
+                    )
+                }
             }
         }
     }

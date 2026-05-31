@@ -1,45 +1,96 @@
 package com.smartboard.ime
 
+import android.content.ClipboardManager
+import android.inputmethodservice.InputMethodService
 import android.os.Build
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodSubtype
 import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
-import androidx.core.content.getSystemService
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.ViewModelStore
+import androidx.lifecycle.ViewModelStoreOwner
+import androidx.lifecycle.setViewTreeLifecycleOwner
+import androidx.lifecycle.setViewTreeViewModelStoreOwner
+import androidx.savedstate.SavedStateRegistry
+import androidx.savedstate.SavedStateRegistryController
+import androidx.savedstate.SavedStateRegistryOwner
+import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.smartboard.ime.ui.KeyboardController
 import com.smartboard.ime.ui.KeyboardRoot
 import com.smartboard.model.ClipboardReadMode
-import android.content.ClipboardManager
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+/**
+ * SmartBoard input method.
+ *
+ * Jetpack Compose can only be hosted inside a [ComposeView] when the view tree exposes a
+ * [LifecycleOwner], a [ViewModelStoreOwner] and a [SavedStateRegistryOwner]. An
+ * [InputMethodService] does not provide any of these by default, which is why hosting Compose
+ * here previously crashed with "ViewTreeLifecycleOwner not found" the moment the keyboard was
+ * shown. We therefore implement the three owners ourselves and drive the lifecycle from the IME
+ * callbacks.
+ */
 @AndroidEntryPoint
-class SmartKeyboardIME : android.inputmethodservice.InputMethodService() {
+class SmartKeyboardIME :
+    InputMethodService(),
+    LifecycleOwner,
+    ViewModelStoreOwner,
+    SavedStateRegistryOwner {
 
     @Inject
     lateinit var keyboardController: KeyboardController
 
+    private val lifecycleRegistry = LifecycleRegistry(this)
+    private val store = ViewModelStore()
+    private val savedStateRegistryController = SavedStateRegistryController.create(this)
+
+    override val lifecycle: Lifecycle get() = lifecycleRegistry
+    override val viewModelStore: ViewModelStore get() = store
+    override val savedStateRegistry: SavedStateRegistry
+        get() = savedStateRegistryController.savedStateRegistry
+
     private val clipListener = ClipboardManager.OnPrimaryClipChangedListener {
-        val cm = getSystemService(ClipboardManager::class.java) ?: return@OnPrimaryClipChangedListener
-        val text = cm.primaryClip?.getItemAt(0)?.coerceToText(this@SmartKeyboardIME)?.toString()
+        val cm = getSystemService(ClipboardManager::class.java)
             ?: return@OnPrimaryClipChangedListener
+        val clip = cm.primaryClip ?: return@OnPrimaryClipChangedListener
+        if (clip.itemCount == 0) return@OnPrimaryClipChangedListener
+        val text = clip.getItemAt(0)?.coerceToText(this@SmartKeyboardIME)?.toString()
+            ?: return@OnPrimaryClipChangedListener
+        if (text.isBlank()) return@OnPrimaryClipChangedListener
         val mode = keyboardController.uiState.value.settings?.clipboardReadMode
             ?: ClipboardReadMode.BACKGROUND
         keyboardController.onNewClipboardText(text, mode)
     }
 
     override fun onCreate() {
+        // performRestore must run before the lifecycle moves past INITIALIZED.
+        savedStateRegistryController.performRestore(null)
         super.onCreate()
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
         keyboardController.readSystemClipboard = {
-            getSystemService(ClipboardManager::class.java)
-                ?.primaryClip?.getItemAt(0)?.coerceToText(this)?.toString()
+            runCatching {
+                getSystemService(ClipboardManager::class.java)
+                    ?.primaryClip
+                    ?.takeIf { it.itemCount > 0 }
+                    ?.getItemAt(0)
+                    ?.coerceToText(this)
+                    ?.toString()
+            }.getOrNull()
         }
     }
 
     override fun onCreateInputView(): View {
         return ComposeView(this).apply {
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindow)
+            // Make the owners discoverable by Compose's ViewTree* lookups.
+            setViewTreeLifecycleOwner(this@SmartKeyboardIME)
+            setViewTreeViewModelStoreOwner(this@SmartKeyboardIME)
+            setViewTreeSavedStateRegistryOwner(this@SmartKeyboardIME)
+            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
             setContent {
                 KeyboardRoot(keyboardController)
             }
@@ -49,6 +100,7 @@ class SmartKeyboardIME : android.inputmethodservice.InputMethodService() {
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
         keyboardController.bindInputConnection(currentInputConnection)
+        keyboardController.onStartInput(info)
     }
 
     override fun onCurrentInputMethodSubtypeChanged(newSubtype: InputMethodSubtype) {
@@ -63,13 +115,29 @@ class SmartKeyboardIME : android.inputmethodservice.InputMethodService() {
 
     override fun onWindowShown() {
         super.onWindowShown()
-        getSystemService(ClipboardManager::class.java)?.addPrimaryClipChangedListener(clipListener)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        runCatching {
+            getSystemService(ClipboardManager::class.java)
+                ?.addPrimaryClipChangedListener(clipListener)
+        }
     }
 
     override fun onWindowHidden() {
         keyboardController.onWindowHidden()
-        getSystemService(ClipboardManager::class.java)?.removePrimaryClipChangedListener(clipListener)
+        runCatching {
+            getSystemService(ClipboardManager::class.java)
+                ?.removePrimaryClipChangedListener(clipListener)
+        }
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
         super.onWindowHidden()
+    }
+
+    override fun onDestroy() {
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        store.clear()
+        super.onDestroy()
     }
 }
 

@@ -17,7 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ClearAll
 import androidx.compose.material.icons.rounded.Close
 import androidx.compose.material.icons.rounded.Delete
-import androidx.compose.material.icons.rounded.Pin
+import androidx.compose.material.icons.rounded.PushPin
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -149,7 +149,7 @@ fun ClipboardPanel(
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(
-                            Icons.Rounded.Pin,
+                            Icons.Rounded.PushPin,
                             contentDescription = null,
                             tint = if (entry.isPinned) colors.categoryChipText else colors.divider,
                         )
@@ -161,7 +161,15 @@ fun ClipboardPanel(
                             )
                         }
                         IconButton(onClick = { onPinToggle(entry.id, !entry.isPinned) }) {
-                            Icon(Icons.Rounded.Pin, contentDescription = null)
+                            Icon(
+                                Icons.Rounded.PushPin,
+                                contentDescription = null,
+                                tint = if (entry.isPinned) {
+                                    colors.categoryChipText
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                            )
                         }
                         IconButton(onClick = { onDeleteItem(entry.id) }) {
                             Icon(Icons.Rounded.Delete, contentDescription = null)

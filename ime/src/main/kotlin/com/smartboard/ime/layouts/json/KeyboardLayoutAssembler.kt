@@ -26,7 +26,8 @@ object KeyboardLayoutAssembler {
         val symbolRows = buildSymbolRows(dto)
 
         val letterRows = when {
-            symbolsMode && symbolRows != null -> symbolRows
+            symbolsMode && symbolRows != null ->
+                buildSymbolLayoutRows(dto, symbolRows, includeGlobeKey)
             symbolsMode -> buildLetterRows(dto, includeGlobeKey)
             dto.rows.isEmpty() -> {
                 val fk = dto.funcKeys
@@ -64,6 +65,29 @@ object KeyboardLayoutAssembler {
         }
     }
 
+    /**
+     * Symbol pages in the language packs only contain the symbol keys. Without a functional bottom
+     * row the user would be stranded with no space / enter / backspace and no way back to letters,
+     * so we append a backspace to the last symbol row and a bottom row whose "?123" key is relabeled
+     * "ABC" to return to the alphabetic layout.
+     */
+    private fun buildSymbolLayoutRows(
+        dto: LayoutJsonRoot,
+        symbolRows: List<KeyRow>,
+        includeGlobeKey: Boolean,
+    ): List<KeyRow> {
+        val fk = dto.funcKeys ?: return symbolRows
+        val rows = symbolRows.toMutableList()
+        fk.delete?.let { del ->
+            if (rows.isNotEmpty()) {
+                val last = rows.removeAt(rows.lastIndex)
+                rows.add(KeyRow(last.keys + del.toFuncKeyDef(KeyAction.BACKSPACE, "⌫")))
+            }
+        }
+        rows.add(buildBottomRow(dto, fk, includeGlobeKey, symbolsMode = true))
+        return rows
+    }
+
     private fun buildLetterRows(dto: LayoutJsonRoot, includeGlobeKey: Boolean): List<KeyRow> {
         val fk = dto.funcKeys ?: return dto.rows.map { KeyRow(it.keys.map { k -> k.toCharKeyDef() }) }
 
@@ -87,14 +111,24 @@ object KeyboardLayoutAssembler {
         dto: LayoutJsonRoot,
         fk: FuncKeysJson,
         includeGlobeKey: Boolean,
+        symbolsMode: Boolean = false,
     ): KeyRow {
         val keys = mutableListOf<KeyDef>()
+        // The symbols key doubles as the "back to letters" key, so force its label.
+        fk.symbols?.let { sk ->
+            keys.add(
+                KeyDef(
+                    primary = if (symbolsMode) "ABC" else (sk.label ?: "?123"),
+                    width = sk.width?.toKeyWidth() ?: defaultWidth(KeyAction.SYMBOLS),
+                    action = KeyAction.SYMBOLS,
+                ),
+            )
+        }
         if (includeGlobeKey) {
             fk.languageSwitch?.let {
                 keys.add(it.toFuncKeyDef(KeyAction.SWITCH_LANGUAGE, it.label ?: "🌐"))
             }
         }
-        fk.symbols?.let { keys.add(it.toFuncKeyDef(KeyAction.SYMBOLS, it.label ?: "?123")) }
         fk.emoji?.let { keys.add(it.toFuncKeyDef(KeyAction.EMOJI, it.label ?: "😀")) }
         fk.space?.let { keys.add(it.toFuncKeyDef(KeyAction.SPACE, it.label ?: "")) }
         fk.clipboard?.let { keys.add(it.toFuncKeyDef(KeyAction.CLIPBOARD, it.label ?: "📋")) }

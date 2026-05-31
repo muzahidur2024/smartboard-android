@@ -4,6 +4,14 @@
     <string name="onboarding_subtitle">The keyboard that remembers — privately on your device.</string>
     <string name="onboarding_open_settings">Open keyboard settings</string>
     <string name="onboarding_choose_default">Choose default keyboard</string>
-    <string name="onboarding_finish">Finish</string>
-    <string name="onboarding_skip">Skip</string>
+    <string name="onboarding_finish">Finish setup</string>
+    <string name="onboarding_skip">Skip for now</string>
+
+    <string name="onboarding_feature_clipboard_title">Smart clipboard</string>
+    <string name="onboarding_feature_clipboard_desc">Your copied text is saved, searchable and categorized automatically.</string>
+    <string name="onboarding_feature_languages_title">Many languages</string>
+    <string name="onboarding_feature_languages_desc">Type in multiple languages and switch with a single tap.</string>
+    <string name="onboarding_feature_privacy_title">Private by design</string>
+    <string name="onboarding_feature_privacy_desc">Everything stays on your device. No tracking, no cloud.</string>
+    <string name="onboarding_step_setup">Two quick steps to get going</string>
 </resources>

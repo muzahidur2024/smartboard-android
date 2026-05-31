@@ -7,7 +7,6 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -147,19 +146,19 @@ fun KeyboardRoot(
                     ImePanel.Emoji -> EmojiPanel(
                         settings = settings,
                         onPick = { controller.pasteText(it) },
+                        onBackspace = { controller.onKey(com.smartboard.ime.layouts.KeyDef("", action = com.smartboard.ime.layouts.KeyAction.BACKSPACE)) },
                         onClose = { controller.closePanel() },
                         modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f),
                     )
 
-                    ImePanel.Gif -> Box(
-                        Modifier
+                    ImePanel.Gif -> GifPanelPlaceholder(
+                        onClose = { controller.closePanel() },
+                        modifier = Modifier
                             .fillMaxWidth()
                             .weight(1f),
-                    ) {
-                        GifPanelPlaceholder()
-                    }
+                    )
 
                     ImePanel.None -> AnimatedContent(
                         targetState = state.layout,
@@ -186,6 +185,7 @@ fun KeyboardRoot(
                             layout = layout,
                             settings = settings,
                             shiftPressed = state.shiftPressed,
+                            capsLock = state.capsLock,
                             onKey = { controller.onKey(it) },
                             onSpaceLongPress = { controller.openLanguagePicker() },
                             hapticEnabled = haptic,

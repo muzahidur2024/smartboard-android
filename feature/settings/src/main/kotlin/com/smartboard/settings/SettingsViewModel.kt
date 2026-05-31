@@ -8,6 +8,8 @@ import com.smartboard.domain.settings.UpdateSettingUseCase
 import com.smartboard.ime.layouts.json.LanguageMeta
 import com.smartboard.ime.layouts.json.LanguagePackLoader
 import com.smartboard.model.KeyboardSettings
+import com.smartboard.model.ThemeAccent
+import com.smartboard.model.ThemeMode
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -42,6 +44,15 @@ class SettingsViewModel @Inject constructor(
     fun setGifNetwork(v: Boolean) = update { it.copy(networkGifEnabled = v) }
     fun setNumberRow(v: Boolean) = update { it.copy(numberRowEnabled = v) }
     fun setHaptics(v: Boolean) = update { it.copy(hapticEnabled = v) }
+    fun setSound(v: Boolean) = update { it.copy(soundEnabled = v) }
+    fun setWordSuggestions(v: Boolean) = update { it.copy(wordSuggestionsEnabled = v) }
+    fun setAutocorrect(v: Boolean) = update { it.copy(autocorrectEnabled = v) }
+    fun setAutoCategorize(v: Boolean) = update { it.copy(autoCategorize = v) }
+    fun setKeyBorderOutlined(v: Boolean) = update { it.copy(keyBorderOutlined = v) }
+    fun setThemeMode(mode: ThemeMode) = update { it.copy(themeMode = mode) }
+    fun setThemeAccent(accent: ThemeAccent) = update { it.copy(themeAccent = accent) }
+    fun setKeyboardHeight(scale: Float) =
+        update { it.copy(keyboardHeightScale = scale.coerceIn(0.7f, 1.4f)) }
 
     fun moveActiveLanguageUp(index: Int) {
         update { s ->

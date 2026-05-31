@@ -17,6 +17,26 @@
     <string name="settings_gif_network">GIF network</string>
     <string name="settings_keyboard_section">Keyboard</string>
     <string name="settings_number_row">Number row</string>
-    <string name="settings_haptics">Haptics</string>
+    <string name="settings_haptics">Haptic feedback</string>
     <string name="cd_back">Back</string>
+
+    <string name="settings_appearance_section">Appearance</string>
+    <string name="settings_theme_label">Theme</string>
+    <string name="settings_accent_label">Accent color</string>
+    <string name="settings_height_label">Keyboard height</string>
+    <string name="settings_typing_section">Typing</string>
+    <string name="settings_sound">Key sound</string>
+    <string name="settings_word_suggestions">Word suggestions</string>
+    <string name="settings_autocorrect">Autocorrect</string>
+    <string name="settings_auto_categorize">Auto-categorize clipboard</string>
+    <string name="settings_key_border">Outlined keys</string>
+
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_amoled">AMOLED</string>
+    <string name="theme_system">System</string>
+    <string name="accent_default">Default</string>
+    <string name="accent_blue">Blue</string>
+    <string name="accent_purple">Purple</string>
+    <string name="accent_green">Green</string>
 </resources>
