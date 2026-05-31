@@ -85,8 +85,13 @@ class SmartKeyboardIME :
     }
 
     override fun onCreateInputView(): View {
+        // CRITICAL: Compose's WindowRecomposer resolves the LifecycleOwner by walking up from the
+        // window's root/decor view (not from the ComposeView). So the owners MUST be attached to
+        // the decor view, otherwise hosting Compose throws "ViewTreeLifecycleOwner not found" and
+        // the keyboard crashes every time it is shown. We set them on both the decor view and the
+        // ComposeView to satisfy every ViewTree lookup (recomposer, saveable state, etc.).
+        attachOwnersToDecorView()
         return ComposeView(this).apply {
-            // Make the owners discoverable by Compose's ViewTree* lookups.
             setViewTreeLifecycleOwner(this@SmartKeyboardIME)
             setViewTreeViewModelStoreOwner(this@SmartKeyboardIME)
             setViewTreeSavedStateRegistryOwner(this@SmartKeyboardIME)
@@ -97,8 +102,17 @@ class SmartKeyboardIME :
         }
     }
 
+    private fun attachOwnersToDecorView() {
+        val decorView = window?.window?.decorView ?: return
+        decorView.setViewTreeLifecycleOwner(this)
+        decorView.setViewTreeViewModelStoreOwner(this)
+        decorView.setViewTreeSavedStateRegistryOwner(this)
+    }
+
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
+        // Re-assert the owners in case the window/decor view was (re)created.
+        attachOwnersToDecorView()
         keyboardController.bindInputConnection(currentInputConnection)
         keyboardController.onStartInput(info)
     }
