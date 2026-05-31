@@ -18,24 +18,28 @@ object HapticsManager {
     }
 
     private fun vibrate(context: Context, light: Boolean) {
-        val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            val vm = context.getSystemService(VibratorManager::class.java)
-            vm?.defaultVibrator
-        } else {
-            @Suppress("DEPRECATION")
-            context.getSystemService(Vibrator::class.java)
-        } ?: return
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            val effect = if (light) {
-                VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
+        try {
+            val vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val vm = context.getSystemService(VibratorManager::class.java)
+                vm?.defaultVibrator
             } else {
-                VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
+                @Suppress("DEPRECATION")
+                context.getSystemService(Vibrator::class.java)
+            } ?: return
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                val effect = if (light) {
+                    VibrationEffect.createPredefined(VibrationEffect.EFFECT_TICK)
+                } else {
+                    VibrationEffect.createPredefined(VibrationEffect.EFFECT_CLICK)
+                }
+                vibrator.vibrate(effect)
+            } else {
+                @Suppress("DEPRECATION")
+                vibrator.vibrate(if (light) 20L else 35L)
             }
-            vibrator.vibrate(effect)
-        } else {
-            @Suppress("DEPRECATION")
-            vibrator.vibrate(if (light) 20L else 35L)
+        } catch (_: SecurityException) {
+            // VIBRATE permission not granted — silently degrade.
         }
     }
 }
