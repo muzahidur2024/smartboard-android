@@ -1,12 +1,14 @@
 package com.smartboard.ime
 
 import android.content.ClipboardManager
+import android.content.Context
 import android.inputmethodservice.InputMethodService
 import android.os.Build
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodSubtype
-import androidx.compose.ui.platform.ComposeView
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.AbstractComposeView
 import androidx.compose.ui.platform.ViewCompositionStrategy
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -26,14 +28,21 @@ import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
 /**
- * SmartBoard input method.
+ * SmartBoard input method service.
  *
- * Jetpack Compose can only be hosted inside a [ComposeView] when the view tree exposes a
- * [LifecycleOwner], a [ViewModelStoreOwner] and a [SavedStateRegistryOwner]. An
- * [InputMethodService] does not provide any of these by default, which is why hosting Compose
- * here previously crashed with "ViewTreeLifecycleOwner not found" the moment the keyboard was
- * shown. We therefore implement the three owners ourselves and drive the lifecycle from the IME
- * callbacks.
+ * Hosting Jetpack Compose inside an [InputMethodService] is tricky because:
+ * 1. The service is NOT a [LifecycleOwner], [ViewModelStoreOwner], or [SavedStateRegistryOwner].
+ * 2. When the ComposeView is added to the IME window by the framework (in `setInputView`), Compose
+ *    walks up the view tree looking for a LifecycleOwner on the window root. Since the IME window
+ *    is an internal LinearLayout (`parentPanel`) with no owners, it crashes with
+ *    "ViewTreeLifecycleOwner not found".
+ * 3. Setting owners on the decor view doesn't reliably work because the framework may add our view
+ *    before the decor view is set up, or to a different parent.
+ *
+ * The solution: use a custom [AbstractComposeView] subclass that, in [onAttachedToWindow], walks
+ * up the **entire** ancestor chain and sets the lifecycle/viewmodel/savedstate owners on every
+ * view all the way to the root. This guarantees that no matter where Compose resolves from, it
+ * will find valid owners.
  */
 @AndroidEntryPoint
 class SmartKeyboardIME :
@@ -68,7 +77,6 @@ class SmartKeyboardIME :
     }
 
     override fun onCreate() {
-        // performRestore must run before the lifecycle moves past INITIALIZED.
         savedStateRegistryController.performRestore(null)
         super.onCreate()
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
@@ -85,34 +93,15 @@ class SmartKeyboardIME :
     }
 
     override fun onCreateInputView(): View {
-        // CRITICAL: Compose's WindowRecomposer resolves the LifecycleOwner by walking up from the
-        // window's root/decor view (not from the ComposeView). So the owners MUST be attached to
-        // the decor view, otherwise hosting Compose throws "ViewTreeLifecycleOwner not found" and
-        // the keyboard crashes every time it is shown. We set them on both the decor view and the
-        // ComposeView to satisfy every ViewTree lookup (recomposer, saveable state, etc.).
-        attachOwnersToDecorView()
-        return ComposeView(this).apply {
-            setViewTreeLifecycleOwner(this@SmartKeyboardIME)
-            setViewTreeViewModelStoreOwner(this@SmartKeyboardIME)
-            setViewTreeSavedStateRegistryOwner(this@SmartKeyboardIME)
-            setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnViewTreeLifecycleDestroyed)
-            setContent {
-                KeyboardRoot(keyboardController)
-            }
+        val controller = keyboardController
+        val ime = this
+        return ImeComposeView(this, ime) {
+            KeyboardRoot(controller)
         }
-    }
-
-    private fun attachOwnersToDecorView() {
-        val decorView = window?.window?.decorView ?: return
-        decorView.setViewTreeLifecycleOwner(this)
-        decorView.setViewTreeViewModelStoreOwner(this)
-        decorView.setViewTreeSavedStateRegistryOwner(this)
     }
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
-        // Re-assert the owners in case the window/decor view was (re)created.
-        attachOwnersToDecorView()
         keyboardController.bindInputConnection(currentInputConnection)
         keyboardController.onStartInput(info)
     }
@@ -152,6 +141,48 @@ class SmartKeyboardIME :
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         store.clear()
         super.onDestroy()
+    }
+}
+
+/**
+ * A [AbstractComposeView] subclass that, before calling super.onAttachedToWindow (which triggers
+ * the WindowRecomposer creation), stamps the LifecycleOwner/ViewModelStoreOwner/SavedStateRegistryOwner
+ * on itself AND on every ancestor view up to the root. This is the only reliable way to ensure
+ * Compose's `findViewTreeLifecycleOwner()` walk-up succeeds inside the IME window, whose internal
+ * `parentPanel` LinearLayout is not under our control.
+ */
+private class ImeComposeView(
+    context: Context,
+    private val owner: SmartKeyboardIME,
+    private val content: @Composable () -> Unit,
+) : AbstractComposeView(context) {
+
+    init {
+        setViewCompositionStrategy(ViewCompositionStrategy.DisposeOnDetachedFromWindowOrReleasedFromPool)
+    }
+
+    @Composable
+    override fun Content() {
+        content()
+    }
+
+    override fun onAttachedToWindow() {
+        // Stamp the owners on this view.
+        setViewTreeLifecycleOwner(owner)
+        setViewTreeViewModelStoreOwner(owner)
+        setViewTreeSavedStateRegistryOwner(owner)
+
+        // Walk up to root and stamp on every ancestor. This is what makes the
+        // WindowRecomposer's findViewTreeLifecycleOwner() succeed.
+        var current: View? = this.parent as? View
+        while (current != null) {
+            current.setViewTreeLifecycleOwner(owner)
+            current.setViewTreeViewModelStoreOwner(owner)
+            current.setViewTreeSavedStateRegistryOwner(owner)
+            current = current.parent as? View
+        }
+
+        super.onAttachedToWindow()
     }
 }
 
