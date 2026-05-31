@@ -1,5 +1,6 @@
 package com.smartboard.ime.ui
 
+import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputConnection
 import com.smartboard.domain.clipboard.ClearClipboardHistoryUseCase
 import com.smartboard.domain.clipboard.DeleteClipboardEntryUseCase
@@ -29,6 +30,7 @@ import com.smartboard.model.PinnedSnippet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,6 +47,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
+@OptIn(ExperimentalCoroutinesApi::class)
 class KeyboardController @Inject constructor(
     private val observeSettings: ObserveSettingsUseCase,
     private val updateSetting: UpdateSettingUseCase,
@@ -64,6 +67,7 @@ class KeyboardController @Inject constructor(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var inputConnection: InputConnection? = null
     private var layoutLoadJob: Job? = null
+    private var lastShiftTapTime = 0L
 
     private val categoryFilter = MutableStateFlow<ClipboardCategory?>(null)
     private val searchQuery = MutableStateFlow("")
@@ -118,8 +122,25 @@ class KeyboardController @Inject constructor(
         inputConnection = ic
     }
 
+    /**
+     * Called when a new editor starts. Resets transient typing state so the keyboard does not
+     * carry over shift/composer/panel state between unrelated text fields.
+     */
+    fun onStartInput(info: EditorInfo?) {
+        _uiState.update {
+            it.copy(
+                activePanel = ImePanel.None,
+                composerBuffer = "",
+                shiftPressed = false,
+                capsLock = false,
+                suggestions = emptyList(),
+            )
+        }
+    }
+
     fun onWindowHidden() {
         inputConnection = null
+        _uiState.update { it.copy(activePanel = ImePanel.None, composerBuffer = "") }
     }
 
     fun onNewClipboardText(text: String, readMode: ClipboardReadMode) {
@@ -165,7 +186,18 @@ class KeyboardController @Inject constructor(
     }
 
     fun toggleShift() {
-        _uiState.update { it.copy(shiftPressed = !it.shiftPressed) }
+        val now = System.currentTimeMillis()
+        _uiState.update { st ->
+            when {
+                // A tap while caps lock is engaged turns everything off.
+                st.capsLock -> st.copy(capsLock = false, shiftPressed = false)
+                // Two quick taps engage caps lock.
+                now - lastShiftTapTime <= DOUBLE_TAP_WINDOW_MS && st.shiftPressed ->
+                    st.copy(capsLock = true, shiftPressed = true)
+                else -> st.copy(shiftPressed = !st.shiftPressed)
+            }
+        }
+        lastShiftTapTime = now
     }
 
     fun toggleSymbols() {
@@ -177,7 +209,7 @@ class KeyboardController @Inject constructor(
         val s = _uiState.value.settings ?: return
         val list = s.activeLanguages
         if (list.size < 2) return
-        _uiState.update { it.copy(languageSwitchForward = forward) }
+        _uiState.update { it.copy(languageSwitchForward = forward, composerBuffer = "") }
         val n = list.size
         val nextIdx = (s.currentLanguageIndex + if (forward) 1 else n - 1).floorMod(n)
         scope.launch(Dispatchers.IO) {
@@ -195,6 +227,7 @@ class KeyboardController @Inject constructor(
     }
 
     fun selectLanguageFromPicker(locale: String) {
+        _uiState.update { it.copy(composerBuffer = "") }
         scope.launch(Dispatchers.IO) {
             updateSetting { s ->
                 val idx = s.activeLanguages.indexOf(locale)
@@ -260,14 +293,29 @@ class KeyboardController @Inject constructor(
             KeyAction.CHARACTER -> handleCharacter(def)
             KeyAction.BACKSPACE -> handleBackspace()
             KeyAction.SHIFT -> toggleShift()
-            KeyAction.ENTER -> inputConnection?.commitText("\n", 1)
-            KeyAction.SPACE -> inputConnection?.commitText(" ", 1)
+            KeyAction.ENTER -> {
+                clearComposer()
+                inputConnection?.commitText("\n", 1)
+            }
+            KeyAction.SPACE -> {
+                clearComposer()
+                inputConnection?.commitText(" ", 1)
+                if (_uiState.value.shiftPressed && !_uiState.value.capsLock) {
+                    _uiState.update { it.copy(shiftPressed = false) }
+                }
+            }
             KeyAction.SWITCH_LANGUAGE -> switchLanguage(_uiState.value.languageSwitchForward)
             KeyAction.EMOJI -> openPanel(ImePanel.Emoji)
             KeyAction.CLIPBOARD -> openPanel(ImePanel.Clipboard)
             KeyAction.SYMBOLS -> toggleSymbols()
             KeyAction.GIF -> openPanel(ImePanel.Gif)
             else -> handleCharacter(def)
+        }
+    }
+
+    private fun clearComposer() {
+        if (_uiState.value.composerBuffer.isNotEmpty()) {
+            _uiState.update { it.copy(composerBuffer = "") }
         }
     }
 
@@ -293,17 +341,38 @@ class KeyboardController @Inject constructor(
                 if (out.isNotEmpty()) {
                     ic.commitText(out, 1)
                 }
+                // A single shift press only affects the next character.
+                if (_uiState.value.shiftPressed && !_uiState.value.capsLock) {
+                    _uiState.update { it.copy(shiftPressed = false) }
+                }
                 return
             }
         }
-        if (_uiState.value.shiftPressed) {
+        // A single shift press only affects the next character; caps lock persists.
+        if (_uiState.value.shiftPressed && !_uiState.value.capsLock) {
             _uiState.update { it.copy(shiftPressed = false) }
         }
         ic.commitText(raw, 1)
     }
 
     private fun handleBackspace() {
-        inputConnection?.deleteSurroundingText(1, 0)
+        val ic = inputConnection ?: return
+        // Consume any pending transliteration buffer first.
+        val buffer = _uiState.value.composerBuffer
+        if (buffer.isNotEmpty()) {
+            _uiState.update { it.copy(composerBuffer = buffer.dropLast(1)) }
+        }
+        // If there is a selection, delete it.
+        val selected = ic.getSelectedText(0)
+        if (!selected.isNullOrEmpty()) {
+            ic.commitText("", 1)
+            return
+        }
+        // Delete a whole code point so emoji / surrogate pairs are removed cleanly.
+        val before = ic.getTextBeforeCursor(2, 0)
+        val len = before?.length ?: 0
+        val count = if (len >= 2 && Character.isSurrogatePair(before!![len - 2], before[len - 1])) 2 else 1
+        ic.deleteSurroundingText(count, 0)
     }
 
     fun pasteFromClipboardItem(entry: ClipboardEntry) {
@@ -358,3 +427,5 @@ class KeyboardController @Inject constructor(
 }
 
 private fun Int.floorMod(n: Int): Int = ((this % n) + n) % n
+
+private const val DOUBLE_TAP_WINDOW_MS = 350L

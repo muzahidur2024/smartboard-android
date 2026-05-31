@@ -1,8 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">SmartBoard</string>
+    <string name="app_tagline">A fast, private keyboard that remembers what matters.</string>
     <string name="enable_keyboard">Enable keyboard</string>
     <string name="choose_default">Choose default keyboard</string>
     <string name="open_settings">Open settings</string>
     <string name="open_onboarding">Open onboarding</string>
+
+    <string name="home_setup_title">Set up SmartBoard</string>
+    <string name="home_step_enable_title">Enable SmartBoard</string>
+    <string name="home_step_enable_desc">Turn SmartBoard on in your system keyboard list.</string>
+    <string name="home_step_select_title">Switch to SmartBoard</string>
+    <string name="home_step_select_desc">Pick SmartBoard as your active input method.</string>
+    <string name="home_status_done">Done</string>
+    <string name="home_status_action">Action needed</string>
+    <string name="home_ready_title">You\'re all set!</string>
+    <string name="home_ready_desc">SmartBoard is enabled and active. Tweak it any time in settings.</string>
+    <string name="home_customize_title">Customize</string>
+    <string name="home_customize_desc">Themes, languages, clipboard and more.</string>
+    <string name="home_try_title">Try it out</string>
+    <string name="home_try_hint">Tap here and type to test your keyboard.</string>
+    <string name="home_guide">View setup guide</string>
 </resources>

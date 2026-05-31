@@ -25,6 +25,7 @@ fun KeyboardGrid(
     layout: KeyboardLayout,
     settings: KeyboardSettings?,
     shiftPressed: Boolean,
+    capsLock: Boolean,
     onKey: (KeyDef) -> Unit,
     onSpaceLongPress: () -> Unit,
     hapticEnabled: Boolean,
@@ -85,6 +86,7 @@ fun KeyboardGrid(
                                 key.primary
                             }
                         }
+                        KeyAction.SHIFT -> if (capsLock) "⇪" else key.primary
                         KeyAction.SPACE -> spaceLabel
                         KeyAction.SWITCH_LANGUAGE -> ""
                         else -> key.primary
